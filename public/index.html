@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>جدول التنظيف</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700&display=swap">
+<style>
+:root {
+  --bg: #eef3f2; --surface: #ffffff; --ink: #12302d; --muted: #5b7370; --line: #d3e0de;
+  --accent: #0f766e; --accent-ink: #ffffff; --seat: #e4efed; --full: #a8432d; --full-bg: #f6e4de;
+  --font-display: "Reem Kufi", "Tajawal", system-ui, sans-serif;
+  --font-body: "Tajawal", system-ui, "Segoe UI", Tahoma, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1b1a; --surface: #152827; --ink: #e3f1ef; --muted: #8fb0ac;
+    --line: #25403d; --accent: #3fc1b3; --accent-ink: #06201d; --seat: #1d3331;
+    --full: #f0a08a; --full-bg: #3a211b; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-block: 24px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 16px; }
+h1 { font-family: var(--font-display); font-size: clamp(28px, 6vw, 40px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.total { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.total b { color: var(--ink); font-size: 1.25em; }
+.me { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.me label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+.me .field { flex: 1 1 240px; min-width: 0; }
+input[type="text"] { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; }
+button { font: inherit; font-weight: 500; cursor: pointer; min-height: 44px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); padding: 8px 16px; }
+button.ghost { background: transparent; color: var(--accent); }
+button:disabled { cursor: not-allowed; opacity: .55; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.status { min-height: 24px; color: var(--muted); margin: -6px 0 0; }
+.status.err { color: var(--full); }
+.days { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.day { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.day.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.day-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.day-name { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--seat); color: var(--accent); white-space: nowrap; }
+.tag.full { background: var(--full-bg); color: var(--full); }
+.count { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
+.seats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.seat { min-height: 40px; border-radius: 8px; background: var(--seat); display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 12px; min-width: 0; }
+.seat.empty { background: transparent; border: 1px dashed var(--line); color: var(--muted); font-size: 14px; }
+.seat.mine { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.seat span { overflow-wrap: anywhere; min-width: 0; }
+.x { min-height: 32px; min-width: 32px; padding: 0; background: transparent; border: 0; color: inherit; font-size: 20px; line-height: 1; border-radius: 6px; }
+.x:hover { background: rgba(0,0,0,.15); }
+.day button.act { width: 100%; margin-top: auto; }
+.note { color: var(--muted); font-size: 14px; }
+footer { text-align: center; padding: 30px 20px; margin-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-family: sans-serif; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>جدول التنظيف</h1>
+      <p class="sub">اختر يوم التنظيف.</p>
+    </div>
+    <div class="total" id="total" aria-live="polite">جاري التحميل...</div>
+  </header>
+
+  <section class="me" aria-label="اسمك">
+    <div class="field">
+      <label for="name">اسمك</label>
+      <input type="text" id="name" maxlength="30" autocomplete="off" placeholder="اكتب اسمك الكامل">
+    </div>
+    <button type="button" class="ghost" id="saveName" hidden>حفظ الاسم</button>
+  </section>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+  <section class="days" id="days" aria-label="أيام الأسبوع"></section>
+
+  <p class="note">إذا امتلأ اليوم يُقفل تلقائيًا. لتغيير يومك اضغط «انقلني إلى هنا» في اليوم الجديد، أو اضغط × لإلغاء التسجيل.</p>
+</div>
+
+<footer>
+  <p>© 2026 | Developed &amp; Maintained by <strong>Aziz</strong></p>
+</footer>
+
+<script>
+(function () {
+  var API = "/api";
+  var DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+  var NAME_KEY = "cleaning-name", ID_KEY = "cleaning-local-id";
+  var cap = 3, rows = [], busy = false, myId = null;
+  var $ = function (id) { return document.getElementById(id); };
+  var nameEl = $("name"), statusEl = $("status"), daysEl = $("days");
+  var todayIdx = (function () { var g = new Date().getDay(); return g >= 0 && g <= 4 ? g : -1; })();
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function say(msg, err) { statusEl.textContent = msg || ""; statusEl.className = "status" + (err ? " err" : ""); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+  nameEl.value = lsGet(NAME_KEY) || "";
+  myId = lsGet(ID_KEY);
+  if (!myId) { myId = "g_" + Math.random().toString(36).slice(2, 12) + Date.now().toString(36); lsSet(ID_KEY, myId); }
+
+  function byDay(d) { return rows.filter(function (r) { return r.day === d; }); }
+  function seatedIn(d) { return byDay(d).slice(0, cap); }
+  function mine() { return rows.find(function (r) { return r.mine; }); }
+
+  async function loadRows(quiet) {
+    try {
+      var r = await fetch(API + "/rows?me=" + encodeURIComponent(myId), { cache: "no-store" });
+      if (!r.ok) throw new Error();
+      rows = await r.json();
+    } catch (e) { if (!quiet) say("تعذر الاتصال بالسيرفر.", true); }
+    render();
+  }
+
+  function render() {
+    var m = mine(), total = 0;
+    daysEl.textContent = "";
+    DAYS.forEach(function (label, d) {
+      var seated = seatedIn(d), full = seated.length >= cap;
+      total += seated.length;
+      var inHere = m && m.day === d;
+      var card = el("article", "day" + (d === todayIdx ? " today" : "") + (full ? " full" : ""));
+      var head = el("div", "day-head");
+      var left = el("div");
+      left.appendChild(el("div", "day-name", label));
+      left.appendChild(el("div", "count", seated.length + " من " + cap));
+      head.appendChild(left);
+      if (full) head.appendChild(el("span", "tag full", "اكتمل"));
+      else if (d === todayIdx) head.appendChild(el("span", "tag", "اليوم"));
+      card.appendChild(head);
+
+      var ul = el("ul", "seats");
+      seated.forEach(function (r) {
+        var li = el("li", "seat" + (r.mine ? " mine" : ""));
+        li.appendChild(el("span", null, r.name));
+        if (r.mine) {
+          var x = el("button", "x", "×");
+          x.type = "button";
+          x.setAttribute("aria-label", "إلغاء تسجيلك");
+          x.addEventListener("click", remove);
+          li.appendChild(x);
+        }
+        ul.appendChild(li);
+      });
+      for (var i = seated.length; i < cap; i++) ul.appendChild(el("li", "seat empty", "مقعد متاح"));
+      card.appendChild(ul);
+
+      var b = el("button", "act");
+      b.type = "button";
+      if (inHere) { b.textContent = "أنت مسجّل هنا"; b.disabled = true; b.className = "act ghost"; }
+      else if (full) { b.textContent = "اكتمل"; b.disabled = true; b.className = "act ghost"; }
+      else { b.textContent = m ? "انقلني إلى هنا" : "سجّلني هنا"; }
+      b.addEventListener("click", function () { pick(d); });
+      card.appendChild(b);
+      daysEl.appendChild(card);
+    });
+    $("total").textContent = "";
+    $("total").appendChild(el("b", null, String(total)));
+    $("total").appendChild(document.createTextNode(" من " + (cap * DAYS.length) + " مسجّلون"));
+    var typed = nameEl.value.trim();
+    $("saveName").hidden = !(m && typed && typed !== m.name);
+  }
+
+  async function send(day, name, okMsg) {
+    busy = true;
+    try {
+      var r = await fetch(API + "/rows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: myId, name: name, day: day })
+      });
+      var data = await r.json().catch(function () { return {}; });
+      if (!r.ok) say(data.error || "حدث خطأ.", true);
+      else { lsSet(NAME_KEY, name); say(okMsg); }
+    } catch (e) { say("تعذر الاتصال بالسيرفر.", true); }
+    busy = false;
+    await loadRows(true);
+  }
+
+  function pick(d) {
+    if (busy) return;
+    var name = nameEl.value.trim();
+    if (!name) { say("اكتب اسمك أولًا.", true); nameEl.focus(); return; }
+    var wasMove = !!mine();
+    send(d, name, wasMove ? "تم نقلك إلى يوم " + DAYS[d] + "." : "تم تسجيلك يوم " + DAYS[d] + ".");
+  }
+
+  async function remove() {
+    if (busy) return;
+    busy = true;
+    try {
+      var r = await fetch(API + "/rows", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: myId })
+      });
+      if (!r.ok) throw new Error();
+      say("تم إلغاء التسجيل.");
+    } catch (e) { say("تعذر الاتصال بالسيرفر.", true); }
+    busy = false;
+    await loadRows(true);
+  }
+
+  $("saveName").addEventListener("click", function () {
+    var m = mine(), name = nameEl.value.trim();
+    if (!m || !name || busy) return;
+    send(m.day, name, "تم حفظ الاسم.");
+  });
+
+  nameEl.addEventListener("input", render);
+
+  loadRows();
+  setInterval(function () { if (!busy) loadRows(true); }, 10000);
+})();
+</script>
+</body>
+</html>

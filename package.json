@@ -1,0 +1,9 @@
+{
+  "name": "cleaning-schedule",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "mongoose": "^8.5.0"
+  }
+}
